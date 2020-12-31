@@ -29,12 +29,21 @@ Second-order ordinary differential equations of the form
 
 can be solved directly.
 
+Explicit Runge-Kutta-Nyström methods with fixed timestep size:
 
+- `Nyström4`:
+- `Nyström5`:
 
-A popular approach in structural dynamics is the family of Newmark methods.
+Explicit Runge-Kutta-Nyström methods with adaptive timestepping:
 
--`Störmer's rule`:
--`Fox-Goodwin`:
--`Linear acceleration`:
--`Constant acceleration`:
+- `BettisRKN45`:
+- `DPRKN64`:
+- `DPRKN86`:
+
+A popular approach in structural dynamics is the family of Newmark methods:
+
+- `Stoermer`:
+- `FoxGoodwin`:
+- `LinearAcceleration`:
+- `ConstantAcceleration`:
 
