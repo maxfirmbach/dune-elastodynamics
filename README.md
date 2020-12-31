@@ -33,5 +33,8 @@ can be solved directly.
 
 A popular approach in structural dynamics is the family of Newmark methods.
 
-`Störmer's rule`
+-`Störmer's rule`:
+-`Fox-Goodwin`:
+-`Linear acceleration`:
+-`Constant acceleration`:
 
