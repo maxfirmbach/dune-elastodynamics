@@ -13,3 +13,25 @@ $
       \epsilon(u) = \frac{1}{2}(\nabla u + (\nabla u)^T) & \text{(Strain-displacement relation)} \\[10pt]
     \end{cases} 
 $
+
+## Assemblers
+
+
+
+
+
+The discretized system can be written as:
+
+
+## Time-stepping methods
+
+Second-order ordinary differential equations of the form
+
+can be solved directly.
+
+
+
+A popular approach in structural dynamics is the family of Newmark methods.
+
+`Störmer's rule`
+
