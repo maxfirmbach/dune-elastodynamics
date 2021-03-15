@@ -16,7 +16,7 @@ The overall displacement of the beam is calculated.
 ### Calculation
 The main new features are:
 - setting up the necessary data structures
-- generating the grid
+- load the grid
 - creating the function space basis tree
 - assembling the problem and boundary conditions
 - solving the linear system
