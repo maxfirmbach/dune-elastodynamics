@@ -41,20 +41,21 @@ StiffnessAssembler stiffnessAssembler(E, nu);
 operatorAssembler.initialize(stiffnessMatrix);
 operatorAssembler.assemble(stiffnessAssembler, stiffnessMatrix, false);
 ```
+A short overview of the different assemblers implemented right now is given in the following.
 
 Global assembler:
 
-- `operator`:
+- `operator`: global assembler getting operator for mass or stiffness
 
 Stiffness assembler:
 
-- `stiffness`:
+- `stiffness`: local assembler for stiffness using linear elasticity
 
 Mass assembler:
 
-- `consistentmass`:
-- `hrzlumpedmass`:
-- `lobattolumpedmass`:
+- `consistentmass`: local assembler computing the full mass matrix
+- `hrzlumpedmass`: local assembler for a lumped mass matrix by scaling the diagonal
+- `lobattolumpedmass`: local assembler for a lumped mass matrix by using appropriate quadrature rules
 
 ## Time-stepping methods
 
@@ -63,19 +64,19 @@ ordinary differential equations.
 
 Explicit Runge-Kutta-Nyström methods with fixed timestep size:
 
-- `Nyström4`:
-- `Nyström5`:
+- `nyström4`:
+- `nyström5`:
 
 Explicit Runge-Kutta-Nyström methods with adaptive timestepping:
 
-- `BettisRKN45`:
-- `DPRKN64`:
-- `DPRKN86`:
+- `bettisrkn45`:
+- `dprkn64`:
+- `dprkn86`:
 
 A popular approach in structural dynamics is the family of Newmark methods:
 
-- `Stoermer`:
-- `FoxGoodwin`:
-- `LinearAcceleration`:
-- `ConstantAcceleration`:
+- `stoermer`:
+- `foxgoodwin`:
+- `linearacceleration`:
+- `constantacceleration`:
 
