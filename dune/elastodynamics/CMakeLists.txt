@@ -1,0 +1,4 @@
+add_subdirectory(assemblers)
+add_subdirectory(quadraturerules)
+add_subdirectory(timesteppers)
+add_subdirectory(utilities)
