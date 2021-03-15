@@ -14,6 +14,14 @@ The main new features are:
 - solving the linear system
 - getting output for paraview
 
+### Result
+
+<figure>
+	<center>
+		<img src='Example01.png'>
+	</center>
+</figure>
+
 ## Example02
 
 ## Example03
