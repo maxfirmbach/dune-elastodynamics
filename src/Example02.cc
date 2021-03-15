@@ -1,9 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-// vi: set et ts=4 sw=2 sts=2:
-
 #include <config.h>
 
 #include <dune/common/parallel/mpihelper.hh>
@@ -36,7 +33,6 @@ const int p = 2;
 int main(int argc, char** argv) {
 
   Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
-  bool passed = true;
   
   // generate Grid
   using Grid = UGGrid<dim>;

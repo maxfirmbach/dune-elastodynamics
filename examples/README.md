@@ -6,6 +6,14 @@ elasticity cases.
 In this example, a slender cantilever beam is put under a unit load at the free end.
 The overall displacement of the beam is calculated.
 
+### Setup
+<figure>
+	<center>
+		<img src='Example01/Setup.png'>
+	</center>
+</figure>
+
+### Calculation
 The main new features are:
 - setting up the necessary data structures
 - generating the grid
@@ -15,10 +23,9 @@ The main new features are:
 - getting output for paraview
 
 ### Result
-
 <figure>
 	<center>
-		<img src='Example01.png'>
+		<img src='Example01/Result.png'>
 	</center>
 </figure>
 
