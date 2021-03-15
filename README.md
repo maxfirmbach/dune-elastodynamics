@@ -19,14 +19,36 @@ $
 For the discretization in space, finite elements are used. The assemblers work with
 function space basis trees, e.g. a lagragian basis of order p and dimension k is
 constructed as:
-
-```
+```C
+// create basis
+int p = 2, k = 3;
 auto basis = makeBasis(gridView, power<dim>(lagrange<p>()));
 ```
+This basis will be used by an operator assembler, sorting local computations into
+the global matrix (stiffness, mass, ...). For e.g. a sparse stiffness matrix, the operator
+assembler is first created with an appropriate basis. Afterwards the datastructure, which
+should hold the entries is initialized with the operator assembler. In a third step the
+operator is assembled by using a local assembler, the datastructure and a boolean indicating
+if the matrix is lumped or not. The local assembler in this case for the stiffness is set
+up with a given Young's modulus and Poisson ratio.
+```C
+// assemble stiffness
+operatorType stiffnessMatrix;
+double E = 1098500.0, nu = 0.3;
+  
+OperatorAssembler operatorAssembler(basis);
+StiffnessAssembler stiffnessAssembler(E, nu);
+operatorAssembler.initialize(stiffnessMatrix);
+operatorAssembler.assemble(stiffnessAssembler, stiffnessMatrix, false);
+```
+
+Global assembler:
+
+- `operator`:
 
 Stiffness assembler:
 
-- `stiffness`
+- `stiffness`:
 
 Mass assembler:
 
