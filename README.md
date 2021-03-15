@@ -16,18 +16,28 @@ $
 
 ## Assemblers
 
+For the discretization in space, finite elements are used. The assemblers work with
+function space basis trees, e.g. a lagragian basis of order p and dimension k is
+constructed as:
 
+```
+auto basis = makeBasis(gridView, power<dim>(lagrange<p>()));
+```
 
+Stiffness assembler:
 
+- `stiffness`
 
-The discretized system can be written as:
+Mass assembler:
 
+- `consistentmass`:
+- `hrzlumpedmass`:
+- `lobattolumpedmass`:
 
 ## Time-stepping methods
 
-Second-order ordinary differential equations of the form
-
-can be solved directly.
+For the time-stepping, direct methods are implemented for solving second order
+ordinary differential equations.
 
 Explicit Runge-Kutta-Nyström methods with fixed timestep size:
 
