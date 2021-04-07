@@ -4,9 +4,11 @@ elasticity cases.
 
 ## Example01
 In this example, a slender cantilever beam is put under a unit load at the free end.
-The overall displacement of the beam is calculated.
+The overall displacement of the beam is calculated. One can also check the analytical
+solution of the Euler-Bernoulli or Timoschenko beam theory.
 
 ### Setup
+The structured mesh is generated with gmsh and consists of .
 <figure>
 	<center>
 		<img src='Example01/Setup.png'>

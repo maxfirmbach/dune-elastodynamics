@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
   Functions::LagrangeBasis<GridView, p> Pbasis(gridView);
   auto displacementFunction = Functions::makeDiscreteGlobalBasisFunction<displacementRange> (Pbasis, x);
 
-  SubsamplingVTKWriter<GridView> vtkWriter(gridView, refinementLevels(2));
+  SubsamplingVTKWriter<GridView> vtkWriter(gridView, refinementLevels(0));
   vtkWriter.addVertexData(displacementFunction, VTK::FieldInfo("displacement", VTK::FieldInfo::Type::vector, dim));
   vtkWriter.write("result");
 
