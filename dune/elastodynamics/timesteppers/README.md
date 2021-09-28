@@ -6,20 +6,20 @@ order equations.
 
 
 
-Explicit Runge-Kutta-Nyström methods with fixed timestep size (expect a lumped
+Explicit Runge-Kutta-Nyström methods with fixed timestep size [[1]](#1) (expect a lumped
 mass matrix $`M`$):
 
-- `nyström4`: fourth order method with fixed timestep [[1]](#1)
-- `nyström5`: fitfh order method with fixed timestep [[1]](#1)
+- `nyström4`: fourth order method with fixed timestep
+- `nyström5`: fitfh order method with fixed timestep
 
-Explicit Runge-Kutta-Nyström methods with adaptive timestepping (expect a lumped
+Explicit Runge-Kutta-Nyström methods with adaptive timestepping [[2]](#2) [[3]](#3) (expect a lumped
 mass matrix $`M`$):
 
-- `bettisrkn45`: fitfh order method with fourth order error estimation [[2]](#2)
-- `dprkn64`: sixth order method with fourth order error estimation [[3]](#3)
-- `dprkn86`: eigth order method with sixth order error estimation [[3]](#3)
+- `bettisrkn45`: fitfh order method with fourth order error estimation
+- `dprkn64`: sixth order method with fourth order error estimation
+- `dprkn86`: eigth order method with sixth order error estimation
 
-A popular approach in structural dynamics is the family of Newmark methods:
+A popular approach in structural dynamics is the family of Newmark methods [[4]](#4):
 
 - `stoermer`: explicit central difference method
 - `foxgoodwin`: fourth order conditionally stable implicit method
@@ -36,11 +36,6 @@ Solving Ordinary Differential Equations I - Nonstiff Problems.
 Bettis D. G. (1973). 
 A Runge-Kutta Nyström algorithm.
 Celestial mechanics, 8, 229-233.
-
-<a id="3">[3]</a> 
-Dormand J. R., El-Mikkawy M. E., Prince P. J. (1987). 
-High-Order Embedded Runge-Kutta-Nystrom Formulae.
-IMA Journal of Numerical Analysis, 7(4), 423-430.
 
 <a id="3">[3]</a> 
 Dormand J. R., El-Mikkawy M. E., Prince P. J. (1987). 
