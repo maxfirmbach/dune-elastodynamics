@@ -26,7 +26,6 @@
 #include <dune/elastodynamics/utilities/boundaryindexbcassembler.hh>
 
 #include <omp.h>
-#include <chrono>
 
 using namespace Dune;
 const int dim = 2;
@@ -60,14 +59,11 @@ int main(int argc, char** argv) {
   operatorType stiffnessMatrix;
   double E = 1000000, nu = 0.3;
   
-  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
   Elastodynamics::OperatorAssembler<Basis> operatorAssembler(basis);
   operatorAssembler.initialize(stiffnessMatrix);
   Elastodynamics::StiffnessAssembler stiffnessAssembler(E, nu);
   operatorAssembler.assemble(stiffnessAssembler, stiffnessMatrix, false);
   std::cout << "Stiffness Matrix Assembly complete!" << std::endl;
-  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-  std::cout << std::setprecision(9) << "Time difference = " << std::chrono::duration<float>(end - begin).count() << " [s]" << std::endl;
 
   // set boundary conditions
   blockVector loadVector(basis.size());
