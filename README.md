@@ -16,6 +16,8 @@ It is assumed the dune core modules and all other necessary libraries are allrea
 Dependencies:
 
 * dune-common, dune-geometry, dune-uggrid, dune-grid, dune-localfunctions, dune-istl, dune-functions, dune-foamgrid, dune-typetree
-* MPI, Message Passing Interface library  
+* MPI, Message Passing Interface library
 * OpenMP
 
+Run the following command to build the module:
+`dunecontrol --current all`
