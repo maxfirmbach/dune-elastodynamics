@@ -39,7 +39,7 @@ RKNCoefficients coefficients = RKN5();
 RungeKuttaNystroem<operatorType, blockVector> rkn(lumpedmassMatrix, stiffnessMatrix, coefficients, fixed);
 rkn.initialize(loadVector);
 
-while(t_end) {
+while(t<t_end) {
   
   // do something
 
