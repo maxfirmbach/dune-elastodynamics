@@ -15,6 +15,7 @@ It is assumed the dune core modules and all other necessary libraries are allrea
 
 Dependencies:
 
-* Bullet list
-* Bullet list item 2
+* dune-common, dune-geometry, dune-uggrid, dune-grid, dune-localfunctions, dune-istl, dune-functions, dune-foamgrid, dune-typetree
+* MPI, Message Passing Interface library
+* OpenMP
 

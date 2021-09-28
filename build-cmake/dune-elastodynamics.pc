@@ -1,0 +1,15 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+CXX=/usr/bin/c++ 
+CC=/usr/bin/cc
+DEPENDENCIES=
+
+Name: dune-elastodynamics
+Version: 1.0
+Description: dune-elastodynamics module
+URL: http://dune-project.org/
+Requires: dune-common dune-geometry dune-uggrid dune-grid dune-localfunctions dune-istl dune-functions dune-foamgrid
+Libs: -L${libdir}
+Cflags: -I${includedir}
