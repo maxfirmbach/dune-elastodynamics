@@ -6,14 +6,14 @@ order equations.
 
 
 
-Explicit Runge-Kutta-Nyström methods with fixed timestep size [[1]](#1) (expect a lumped
-mass matrix $`M`$):
+Explicit Runge-Kutta-Nyström methods with fixed timestep size [[1]](#1) (expects a lumped
+mass matrix):
 
 - `nyström4`: fourth order method with fixed timestep
 - `nyström5`: fitfh order method with fixed timestep
 
-Explicit Runge-Kutta-Nyström methods with adaptive timestepping [[2]](#2) [[3]](#3) (expect a lumped
-mass matrix $`M`$):
+Explicit Runge-Kutta-Nyström methods with adaptive timestepping [[2]](#2) [[3]](#3) (expects a lumped
+mass matrix):
 
 - `bettisrkn45`: fitfh order method with fourth order error estimation
 - `dprkn64`: sixth order method with fourth order error estimation
@@ -25,6 +25,30 @@ A popular approach in structural dynamics is the family of Newmark methods [[4]]
 - `foxgoodwin`: fourth order conditionally stable implicit method
 - `linearacceleration`: second order conditionally stable implicit method
 - `constantacceleration`: second order unconditionally stable implicit method
+
+## Example
+
+Constructing a Runge-Kutta-Nyström method of order 5 with fixed time step size:
+
+```cpp
+double t = 0.0;
+double dt = 0.0001;
+
+FixedStepController fixed(t, dt);
+RKNCoefficients coefficients = RKN5();
+RungeKuttaNystroem<operatorType, blockVector> rkn(lumpedmassMatrix, stiffnessMatrix, coefficients, fixed);
+rkn.initialize(loadVector);
+
+while(t_end) {
+  
+  // do something
+
+  rkn.step(displacementVector, velocityVector, accelerationVector, loadVector);
+
+  // do something
+
+}
+```
 
 ## References
 
