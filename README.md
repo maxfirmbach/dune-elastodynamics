@@ -15,7 +15,6 @@ It is assumed the dune core modules and all other necessary libraries are allrea
 
 Dependencies:
 
-Markup : * Bullet list
-
-         * Bullet list item 2
+* Bullet list
+* Bullet list item 2
 
