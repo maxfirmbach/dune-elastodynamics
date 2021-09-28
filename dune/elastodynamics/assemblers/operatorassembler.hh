@@ -6,6 +6,8 @@
 
 #include <dune/istl/matrixindexset.hh>
 
+#include <omp.h>
+
 namespace Dune::Elastodynamics {
 
   template <class Basis>
@@ -14,22 +16,20 @@ namespace Dune::Elastodynamics {
     private:
 	  
 	  const Basis& basis_;
-			
+		
 	  void addIndices(MatrixIndexSet& occupationPattern) {
 	    
-	    auto gridView      = basis_.gridView();
-        auto localView     = basis_.localView();
-        auto localIndexSet = basis_.localIndexSet();
+	    auto gridView  = basis_.gridView();
+        auto localView = basis_.localView();
 			  
-        for( const auto& element : elements(gridView)) {	
+        for( const auto& element : elements(gridView, Dune::Partitions::all)) {	
   				
   	      localView.bind(element);
-   	      localIndexSet.bind(localView);
    					
-    	  for( size_t i=0; i<localIndexSet.size(); i++) {
-      	    auto row = localIndexSet.index(i);
-      		for (size_t j=0; j<localIndexSet.size(); j++) {
-              auto col = localIndexSet.index(j);
+    	  for( size_t i=0; i<localView.size(); i++) {
+      	    auto row = localView.index(i);
+      		for (size_t j=0; j<localView.size(); j++) {
+              auto col = localView.index(j);
         	  occupationPattern.add(row[0], col[0]);
       		}
     	  }
@@ -38,33 +38,32 @@ namespace Dune::Elastodynamics {
 	
 	  template <class LocalAssemblerType, class GlobalMatrixType>
 	  void addEntries(LocalAssemblerType& localAssembler, GlobalMatrixType& A, bool lumping) {
-      
-        auto gridView      = basis_.gridView();
-        auto localView     = basis_.localView();
-        auto localIndexSet = basis_.localIndexSet();
-        
+
+        auto gridView  = basis_.gridView();
+       
         typedef typename LocalAssemblerType::LocalMatrix LocalMatrix;
         
-		for( const auto& element : elements(gridView)) {
+        // here we could technically parallelize
+        for( const auto& element : elements(gridView, Dune::Partitions::all)) {
+          
+          auto localView = basis_.localView();
+          localView.bind(element);
 		
-		  localView.bind(element);
-		  localIndexSet.bind(localView);
-		
-		  LocalMatrix localMatrix;
-		  localAssembler.assemble(localMatrix, localView);
+          LocalMatrix localMatrix;
+          localAssembler.assemble(localMatrix, localView);
 
-    	  for( size_t i=0; i<localMatrix.N(); i++) {
-      	    auto row = localIndexSet.index(i);
-      	    if(lumping)
-      	      A[row[0]][row[0]][row[1]][row[1]] += localMatrix[i][i];
-      	    else {
-      		  for( size_t j=0; j<localMatrix.M(); j++) {
-         	    auto col = localIndexSet.index(j);
-         	    A[row[0]][col[0]][row[1]][col[1]] += localMatrix[i][j];
-      	      }
-      	    }
-    	  }
-  	    }    
+          for( size_t i=0; i<localMatrix.N(); i++) {
+            auto row = localView.index(i);
+            if(lumping)
+              A[row[0]][row[0]][row[1]][row[1]] += localMatrix[i][i];
+            else {
+              for( size_t j=0; j<localMatrix.M(); j++) {
+                auto col = localView.index(j);
+                A[row[0]][col[0]][row[1]][col[1]] += localMatrix[i][j];
+              }
+            }
+          }
+        }
 	  }
 
     public:
@@ -75,7 +74,7 @@ namespace Dune::Elastodynamics {
 
 
       template <class GlobalMatrixType>
-      void initialize(GlobalMatrixType& A) 
+      void initialize(GlobalMatrixType& A)  
       {     
         Dune::MatrixIndexSet occupationPattern(basis_.size(), basis_.size());
 		addIndices(occupationPattern);

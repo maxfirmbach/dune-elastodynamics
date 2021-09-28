@@ -7,9 +7,18 @@
 #include "coefficients.hh"
 #include "timestepcontroller.hh"
 
+#include <dune/elastodynamics/preconditioners/distributedscalarproduct.hh>
+#include <dune/elastodynamics/preconditioners/distributedpreconditioner.hh>
+
 namespace Dune {
-  template <typename MatrixType, typename VectorType>	
+
+  template <typename GridView, typename MatrixType, typename VectorType>	
   class Newmark {
+  
+    using Jacobi          = SeqJac<MatrixType, VectorType, VectorType>;
+    using Preconditioner  = DistributedPreconditioner<GridView, Jacobi>;
+    using ScalarProduct   = DistributedScalarProduct<GridView, VectorType>;
+    using LinearOperator  = MatrixAdapter<MatrixType, VectorType, VectorType>;
 	
     private:
 	
@@ -17,16 +26,19 @@ namespace Dune {
 	  double dt_;
 	
 	  MatrixType efficient_mass_, mass_, stiffness_;
+	  const GridView& gridView_;
 	
 	  double beta_, gamma_;
-		
+
     public:
 	  
-      Newmark(MatrixType& mass,
+      Newmark(GridView& gridView,
+              MatrixType& mass,
               MatrixType& stiffness,
               NewmarkCoefficients& coefficients,
 	          TimeStepController& fixed)
-	  : mass_(mass)
+	  : gridView_(gridView)
+	  , mass_(mass)
 	  , stiffness_(stiffness)
 	  , beta_(coefficients.beta())
 	  , gamma_(coefficients.gamma())
@@ -35,15 +47,20 @@ namespace Dune {
 
                 
       void initialize(VectorType& acceleration,
-	                  VectorType& load)
+	                  VectorType load) // we only want a copy and not work on the memory here!
 	  {
         // initial value calculation for acceleration
-        MatrixAdapter<MatrixType, VectorType, VectorType> massOperator(mass_);
-        SeqILU0<MatrixType, VectorType, VectorType> preconditioner(mass_, 1.0);
-        CGSolver<VectorType> cg(massOperator, preconditioner, 1e-10, 15000, 1);
-        InverseOperatorResult statistics;
-        cg.apply(acceleration, load, statistics);
-    
+        Jacobi         jacobi(mass_, 1, 1.0);      
+        Preconditioner preconditioner(gridView_, jacobi);
+        ScalarProduct  scalarProduct(gridView_);
+        LinearOperator linearOperator(mass_);
+  
+        CGSolver<VectorType> solver(linearOperator, scalarProduct, preconditioner, 1e-8, 15000,
+                                    (gridView_.comm().rank()==0) ? 1 : 0);
+  
+        InverseOperatorResult statistics;   
+        solver.apply(acceleration, load, statistics);
+        
         // calculate efficient mass matrix
         dt_ = fixed_.deltaT();
         efficient_mass_ = mass_;
@@ -54,30 +71,34 @@ namespace Dune {
       void step(VectorType& displacement,
                 VectorType& velocity,
                 VectorType& acceleration,
-                VectorType& load)
+                VectorType load) // we only want a copy and not work on the memory here!
       {
         // get fixed timestepsize
         dt_ = fixed_.deltaT();
     
         // predictor      
         displacement.axpy(dt_, velocity);
-        displacement.axpy((0.5-beta_)*dt_*dt_, acceleration);   
+        displacement.axpy((0.5-beta_)*dt_*dt_, acceleration);
         velocity.axpy((1.0-gamma_)*dt_, acceleration);
       
         // solve
         stiffness_.mmv(displacement, load);
-      
-        MatrixAdapter<MatrixType, VectorType, VectorType> efficient_massOperator(efficient_mass_);
-        SeqILU0<MatrixType, VectorType, VectorType> preconditioner(efficient_mass_, 1.0);
-        CGSolver<VectorType> cg(efficient_massOperator, preconditioner, 1e-8, 15000, 1);
-        InverseOperatorResult statistics;
-        cg.apply(acceleration, load, statistics);
-      
+        
+        Jacobi         jacobi(efficient_mass_, 1, 1.0);      
+        Preconditioner preconditioner(gridView_, jacobi);
+        ScalarProduct  scalarProduct(gridView_);
+        LinearOperator linearOperator(efficient_mass_);
+  
+        CGSolver<VectorType> solver(linearOperator, scalarProduct, preconditioner, 1e-8, 15000,
+                                    (gridView_.comm().rank()==0) ? 1 : 0);
+  
+        InverseOperatorResult statistics;   
+        solver.apply(acceleration, load, statistics);
+              
         // corrector
         velocity.axpy(gamma_*dt_, acceleration);
         displacement.axpy(beta_*dt_*dt_, acceleration);
       }
-      
   };
 }
 

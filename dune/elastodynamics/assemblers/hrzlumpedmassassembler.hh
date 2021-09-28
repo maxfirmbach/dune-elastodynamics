@@ -27,15 +27,17 @@ namespace Dune::Elastodynamics {
         
         using Element = typename LocalView::Element;
         auto element = localView.element();
-        const int dim = Element::dimension;
+        static const int dim = LocalView::GridView::dimension;
+        static const int dimworld = LocalView::GridView::dimensionworld;
         auto geometry = element.geometry();  
+        
+        // this is cheating, but hey, it's the same in each dimension ;)
         const auto& localFE = localView.tree().child(0).finiteElement();
-        int order = 2*(dim*localFE.localBasis().order()-1);
+        int order = 2*dim*localFE.localBasis().order();
         const auto& quadRule = QuadratureRules<double, dim>::rule(element.type(), order);
         
         localMatrix.setSize(localView.size(), localView.size());
         localMatrix = 0.0;
-        std::vector<double> weight(dim, 0.0);
         
         for(const auto& quadPoint : quadRule) {
     
@@ -46,25 +48,26 @@ namespace Dune::Elastodynamics {
           localFE.localBasis().evaluateFunction(quadPos, shapefunctionValues);
           
           for( int i=0; i<localFE.size(); i++) {
-            for( int k=0; k<dim; k++) {
+            for( int k=0; k<dimworld; k++) {
               auto row = localView.tree().child(k).localIndex(i);
               localMatrix[row][row] += quadPoint.weight()*rho_*integrationElement*(shapefunctionValues[i]*shapefunctionValues[i]);
             }
           }
         } 
         
+        std::vector<double> weight(dimworld, 0.0);
+        
         for( int i=0; i<localFE.size(); i++) {
-          for( int k=0; k<dim; k++) {
+          for( int k=0; k<dimworld; k++) {
             auto row = localView.tree().child(k).localIndex(i);
             weight[k] += localMatrix[row][row];
           }
         }
         
-        double volume = geometry.volume();
-        double elementMass = volume*rho_;
+        double elementMass = geometry.volume()*rho_; // 1D: volume = length, 2D: volume = area
                   
         for( int i=0; i<localFE.size(); i++) {
-          for( int k=0; k<dim; k++) {
+          for( int k=0; k<dimworld; k++) {
             auto row = localView.tree().child(k).localIndex(i);
             localMatrix[row][row] *= elementMass/weight[k];
           }

@@ -4,7 +4,6 @@
 #include <config.h>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/function.hh>
 
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/io/file/gmshreader.hh>
@@ -26,13 +25,16 @@
 
 #include <dune/elastodynamics/utilities/boundaryindexbcassembler.hh>
 
+#include <omp.h>
+#include <chrono>
+
 using namespace Dune;
 const int dim = 2;
 const int p = 2;
 
 int main(int argc, char** argv) {
 
-  Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
+  MPIHelper& mpiHelper = MPIHelper::instance(argc, argv);
   
   // generate Grid
   using Grid = UGGrid<dim>;
@@ -41,8 +43,8 @@ int main(int argc, char** argv) {
   auto mesh = "beam.msh";
   std::vector<int> materialIndex, boundaryIndex;
   GridFactory<Grid> factory;
-  GmshReader<Grid>::read(factory, mesh, boundaryIndex, materialIndex, true, true);
-  shared_ptr<Grid> grid(factory.createGrid());    
+  GmshReader<Grid>::read(factory, mesh, boundaryIndex, materialIndex);
+  std::shared_ptr<Grid> grid(factory.createGrid());    
   auto gridView = grid->leafGridView();
   
   // generate Basis
@@ -58,17 +60,21 @@ int main(int argc, char** argv) {
   operatorType stiffnessMatrix;
   double E = 1000000, nu = 0.3;
   
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
   Elastodynamics::OperatorAssembler<Basis> operatorAssembler(basis);
   operatorAssembler.initialize(stiffnessMatrix);
   Elastodynamics::StiffnessAssembler stiffnessAssembler(E, nu);
   operatorAssembler.assemble(stiffnessAssembler, stiffnessMatrix, false);
+  std::cout << "Stiffness Matrix Assembly complete!" << std::endl;
+  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+  std::cout << std::setprecision(9) << "Time difference = " << std::chrono::duration<float>(end - begin).count() << " [s]" << std::endl;
 
   // set boundary conditions
   blockVector loadVector(basis.size());
   loadVector = 0.0;
   
   // two nodes at free end, force should sum up to 1N
-  FieldVector<double, dim> force = {0.0, 0.5};
+  FieldVector<double, dim> force = {0.0, 1.0/9.0};
   
   Elastodynamics::BoundaryIndexBCAssembler<Basis> bcAssembler(basis, boundaryIndex);
   bcAssembler.assembleMatrix(stiffnessMatrix);

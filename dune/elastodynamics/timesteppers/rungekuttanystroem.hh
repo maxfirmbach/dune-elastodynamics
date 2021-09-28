@@ -76,14 +76,14 @@ namespace Dune {
 		  stiffness_.mmv(k[i], loadupdate);
 		  lumpedmass_.mv(loadupdate, k[i]);
 	    }
-
+	    
 	    // perform update
 	    displacement.axpy(dt_, velocity);
 	    for(int i=0; i<stages_; i++) 
 	    {
 	      displacement.axpy(dt_*dt_*b_bar_[i], k[i]);
 		  velocity.axpy(dt_*b_[i], k[i]);
-	    }
+	    }	 	    
 	  }	
   };
 }

@@ -5,8 +5,10 @@
 #include <stdio.h>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/function.hh>
+
 #include <dune/grid/uggrid.hh>
+#include <dune/foamgrid/foamgrid.hh>
+
 #include <dune/istl/matrix.hh>
 #include <dune/istl/bdmatrix.hh>
 
@@ -28,7 +30,6 @@ struct HRZLumpingTestSuit {
   void assemble(const Basis& basis, Matrix& lumpedMatrix) {
 
     double rho = 1.0;
-    
     lumpedMatrix = 0.0;
     Elastodynamics::OperatorAssembler<Basis> operatorAssembler(basis);
     Elastodynamics::HRZLumpedMassAssembler hrzlumpedAssembler(rho);
@@ -58,6 +59,37 @@ int main(int argc, char** argv) {
   Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
   using namespace Functions::BasisBuilder;
 
+  // test hrzlumping for bar elements of different order
+  {
+    HRZLumpingTestSuit barTest;
+    
+    using Grid = FoamGrid<1, 2>;
+    using GridView = Grid::LeafGridView;
+  
+    GridFactory<Grid> factory;
+    factory.insertVertex({0, 0});
+    factory.insertVertex({1, 0});
+    factory.insertElement(GeometryTypes::simplex(1), {0, 1}); 
+    std::shared_ptr<Grid> grid(factory.createGrid());
+    auto gridView = grid->leafGridView();
+    
+    using operatorType = BDMatrix<FieldMatrix<double, 2, 2>>;
+    using blockVector  = BlockVector<FieldVector<double, 2>>;
+      
+    {
+      // 2 node bar in 2 dim world
+      auto basis = makeBasis(gridView, power<2>(lagrange<1>()));
+      using Basis = decltype(basis);
+    
+      std::cout << "Test: HRZ lumping for linear bar" << std::endl;
+      operatorType lumpedMatrix(basis.size());
+      barTest.assemble<Basis>(basis, lumpedMatrix);
+      blockVector solution = {{1.0, 1.0}, {1.0, 1.0}};
+      solution *= 1.0/2.0;
+      passed = passed and barTest.check(solution, lumpedMatrix);
+    }
+  }
+
   // test hrzlumping for simplex elements of different order
   {
     HRZLumpingTestSuit simplexTest;
@@ -70,7 +102,7 @@ int main(int argc, char** argv) {
     factory.insertVertex({1, 0});
     factory.insertVertex({0, 1});
     factory.insertElement(GeometryTypes::simplex(2), {0, 1, 2}); 
-    shared_ptr<Grid> grid(factory.createGrid());
+    std::shared_ptr<Grid> grid(factory.createGrid());
     auto gridView = grid->leafGridView();
     
     using operatorType = BDMatrix<FieldMatrix<double, 2, 2>>;
@@ -133,7 +165,7 @@ int main(int argc, char** argv) {
     factory.insertVertex({0, 1});
     factory.insertVertex({1, 1});
     factory.insertElement(GeometryTypes::cube(2), {0, 1, 2, 3}); 
-    shared_ptr<Grid> grid(factory.createGrid());
+    std::shared_ptr<Grid> grid(factory.createGrid());
     auto gridView = grid->leafGridView();
     
     using operatorType = BDMatrix<FieldMatrix<double, 2, 2>>;

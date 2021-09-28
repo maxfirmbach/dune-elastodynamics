@@ -77,7 +77,9 @@ namespace Dune::Elastodynamics {
             for( int k=0; k<dim; k++) {
               auto row = localView.tree().child(k).localIndex(i);  
               SymmetricTensor<dim> stress;
-              hookeTensor.C.mv(strain[i][k], stress);  
+              
+              hookeTensor.C.mv(strain[i][k], stress);  // maybe change to lambda*tr(e)I+2*nu*e
+
               for (int j=0; j<localFE.size(); j++) {
                 for( int l=0; l<dim; l++) {
                   auto col = localView.tree().child(l).localIndex(j);                
@@ -90,4 +92,5 @@ namespace Dune::Elastodynamics {
       }
   };
 }
+
 #endif

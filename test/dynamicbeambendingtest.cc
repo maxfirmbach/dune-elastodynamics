@@ -4,7 +4,6 @@
 #include <config.h>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/function.hh>
 
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/io/file/gmshreader.hh>
@@ -45,8 +44,8 @@ int main(int argc, char** argv) {
   auto mesh = "beam.msh";
   std::vector<int> materialIndex, boundaryIndex;
   GridFactory<Grid> factory;
-  GmshReader<Grid>::read(factory, mesh, boundaryIndex, materialIndex, true, true);
-  shared_ptr<Grid> grid(factory.createGrid());    
+  GmshReader<Grid>::read(factory, mesh, boundaryIndex, materialIndex, true);
+  std::shared_ptr<Grid> grid(factory.createGrid());    
   auto gridView = grid->leafGridView();
   
   // generate Basis
@@ -59,42 +58,44 @@ int main(int argc, char** argv) {
   using diagonalType = BDMatrix<FieldMatrix<double, dim, dim>>;
   using blockVector  = BlockVector<FieldVector<double, dim>>;
 
-  // assemble problem
-  Elastodynamics::OperatorAssembler<Basis> operatorAssembler(basis);
+  {
+    // assemble problem
+    Elastodynamics::OperatorAssembler<Basis> operatorAssembler(basis);
   
-  double E = 1000000, nu = 0.3;
-  operatorType stiffnessMatrix;
-  operatorAssembler.initialize(stiffnessMatrix);
-  Elastodynamics::StiffnessAssembler stiffnessAssembler(E, nu);
-  operatorAssembler.assemble(stiffnessAssembler, stiffnessMatrix, false);
+    double E = 1000000, nu = 0.3;
+    operatorType stiffnessMatrix;
+    operatorAssembler.initialize(stiffnessMatrix);
+    Elastodynamics::StiffnessAssembler stiffnessAssembler(E, nu);
+    operatorAssembler.assemble(stiffnessAssembler, stiffnessMatrix, false);
   
-  double rho = 1.0;
-  diagonalType massMatrix(basis.size());
-  Elastodynamics::HRZLumpedMassAssembler massAssembler(rho);
-  operatorAssembler.assemble(massAssembler, massMatrix, true);
+    double rho = 1.0;
+    diagonalType massMatrix(basis.size());
+    Elastodynamics::HRZLumpedMassAssembler massAssembler(rho);
+    operatorAssembler.assemble(massAssembler, massMatrix, true);
 
-  // set boundary conditions
-  Elastodynamics::BoundaryIndexBCAssembler<Basis> bcAssembler(basis, boundaryIndex);
-  bcAssembler.assembleMatrix(stiffnessMatrix);
-  bcAssembler.assembleMatrix(massMatrix);
+    // set boundary conditions
+    Elastodynamics::BoundaryIndexBCAssembler<Basis> bcAssembler(basis, boundaryIndex);
+    bcAssembler.assembleMatrix(stiffnessMatrix);
+    bcAssembler.assembleMatrix(massMatrix);
 
-  // calculate eigenvalue problem of dynamic equation Kx=c^2Mx
-  // analytical solution ~5.6387
-  double lambda;
-  blockVector x(basis.size());
-  operatorType dynamicMatrix;
-  massMatrix.invert();
-  matMultMat(dynamicMatrix, massMatrix, stiffnessMatrix);
+    // calculate eigenvalue problem of dynamic equation Kx=c^2Mx
+    // analytical solution ~5.6387
+    double lambda;
+    blockVector x(basis.size());
+    operatorType dynamicMatrix;
+    massMatrix.invert();
+    matMultMat(dynamicMatrix, massMatrix, stiffnessMatrix);
   
-  PowerIteration_Algorithms<operatorType, blockVector> eigenvalueAlgorithm(dynamicMatrix, 10000, 1);  
-  auto iterationMatrix = eigenvalueAlgorithm.getIterationMatrix();
-  UMFPack<operatorType> solver(iterationMatrix);
+    PowerIteration_Algorithms<operatorType, blockVector> eigenvalueAlgorithm(dynamicMatrix, 10000, 1);  
+    auto iterationMatrix = eigenvalueAlgorithm.getIterationMatrix();
+    UMFPack<operatorType> solver(iterationMatrix);
   
-  x = 1.0;
-  eigenvalueAlgorithm.applyInverseIteration(20.0, 1e-6, solver, x, lambda);
-  std::cout << "smallest eigenvalue: " << std::sqrt(lambda) << std::endl;
+    x = 1.0;
+    eigenvalueAlgorithm.applyInverseIteration(20.0, 1e-6, solver, x, lambda);
+    std::cout << "smallest eigenvalue: " << std::sqrt(lambda) << std::endl;
   
-  passed = passed and std::abs(5.638-std::sqrt(lambda)) < 1e-2;
+    passed = passed and std::abs(5.638-std::sqrt(lambda)) < 1e-2;
+  }
 
   return passed ? 0 : 1;
 

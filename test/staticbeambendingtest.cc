@@ -4,7 +4,6 @@
 #include <config.h>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/function.hh>
 
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/io/file/gmshreader.hh>
@@ -30,7 +29,7 @@ const int p = 2;
 
 int main(int argc, char** argv) {
 
-  Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
+  const MPIHelper& mpiHelper = MPIHelper::instance(argc, argv);
   bool passed = true;
   
   // generate Grid
@@ -40,8 +39,8 @@ int main(int argc, char** argv) {
   auto mesh = "beam.msh";
   std::vector<int> materialIndex, boundaryIndex;
   GridFactory<Grid> factory;
-  GmshReader<Grid>::read(factory, mesh, boundaryIndex, materialIndex, true, true);
-  shared_ptr<Grid> grid(factory.createGrid());    
+  GmshReader<Grid>::read(factory, mesh, boundaryIndex, materialIndex, true);
+  std::shared_ptr<Grid> grid(factory.createGrid());    
   auto gridView = grid->leafGridView();
   
   // generate Basis

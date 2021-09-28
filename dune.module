@@ -5,6 +5,6 @@
 #Name of the module
 Module: dune-elastodynamics
 Version: 1.0
-Maintainer: max.firmbach@tum.de
+Maintainer: max.firmbach@unibw.de
 #depending on
-Depends: dune-common dune-geometry dune-uggrid dune-grid dune-localfunctions dune-istl dune-functions
+Depends: dune-common dune-geometry dune-uggrid dune-grid dune-localfunctions dune-istl dune-functions dune-foamgrid

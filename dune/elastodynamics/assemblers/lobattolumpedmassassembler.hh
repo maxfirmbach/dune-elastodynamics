@@ -4,6 +4,9 @@
 #ifndef LOBATTO_LUMPED_MASS_ASSEMBLER_HH
 #define LOBATTO_LUMPED_MASS_ASSEMBLER_HH
 
+#include <dune/geometry/quadraturerules.hh>
+#include <dune/elastodynamics/quadraturerules/lumpingquadrature.hh>
+
 namespace Dune::Elastodynamics {
 
   class LobattoLumpedMassAssembler {
@@ -25,12 +28,13 @@ namespace Dune::Elastodynamics {
         
         using Element = typename LocalView::Element;
         auto element = localView.element();
-        const int dim = Element::dimension;
-        auto geometry = element.geometry();  
-        const auto& localFE = localView.tree().child(0).finiteElement();
-        int order = 2;
+        static const int dim = LocalView::GridView::dimension;
+        static const int dimworld = LocalView::GridView::dimensionworld;
+        auto geometry = element.geometry(); 
         
-        LumpingQuadratureRule<double, dim> quadRule(element.type(), order);
+        // this is cheating, but hey, it's the same in each dimension ;)
+        const auto& localFE = localView.tree().child(0).finiteElement();
+        LumpingQuadratureRule<double, dim> quadRule(element.type());
   
         localMatrix.setSize(localView.size(), localView.size());
         localMatrix = 0.0;
@@ -45,7 +49,7 @@ namespace Dune::Elastodynamics {
           
           for( int i=0; i<localFE.size(); i++) {
             for( int j=0; j<localFE.size(); j++) {
-              for( int k=0; k<dim; k++) {
+              for( int k=0; k<dimworld; k++) {
                 auto row = localView.tree().child(k).localIndex(i);
                 auto col = localView.tree().child(k).localIndex(j);
                 localMatrix[row][col] += quadPoint.weight()*rho_*integrationElement*(shapefunctionValues[i]*shapefunctionValues[j]);

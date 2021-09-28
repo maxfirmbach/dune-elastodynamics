@@ -5,8 +5,10 @@
 #include <stdio.h>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/function.hh>
+
 #include <dune/grid/uggrid.hh>
+#include <dune/foamgrid/foamgrid.hh>
+
 #include <dune/istl/matrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
 
@@ -28,7 +30,6 @@ struct ConsistentMassTestSuit {
   void assemble(const Basis& basis, Matrix& matrix) {
 
     double rho = 1.0;
-    
     Elastodynamics::OperatorAssembler<Basis> operatorAssembler(basis);
     operatorAssembler.initialize(matrix);
     Elastodynamics::ConsistentMassAssembler consistentmassAssembler(rho);
@@ -44,6 +45,35 @@ int main(int argc, char** argv) {
   Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
   using namespace Functions::BasisBuilder;
 
+  // test consistent mass for bar element
+  {
+    ConsistentMassTestSuit barTest;
+    
+    using Grid = FoamGrid<1, 2>;
+    using GridView = Grid::LeafGridView;
+  
+    GridFactory<Grid> factory;
+    factory.insertVertex({0, 0});
+    factory.insertVertex({1, 0});
+    factory.insertElement(GeometryTypes::simplex(1), {0, 1}); 
+    std::shared_ptr<Grid> grid(factory.createGrid());
+    auto gridView = grid->leafGridView();
+    
+    using operatorType = BCRSMatrix<FieldMatrix<double, 2, 2>>;
+    using blockVector  = BlockVector<FieldVector<double, 2>>;
+  
+    {
+      // 2 node bar
+      auto basis = makeBasis(gridView, power<2>(lagrange<1>()));
+      using Basis = decltype(basis);
+    
+      std::cout << "Test: Consistent mass for linear bar" << std::endl;
+      operatorType matrix;
+      barTest.assemble<Basis>(basis, matrix);
+      passed = passed and std::abs(matrix.frobenius_norm()-0.74535599249993) < 1e-10;
+    }
+  }
+
   // test consistent mass for simplex element
   {
     ConsistentMassTestSuit simplexTest;
@@ -56,7 +86,7 @@ int main(int argc, char** argv) {
     factory.insertVertex({1, 0});
     factory.insertVertex({0, 1});
     factory.insertElement(GeometryTypes::simplex(2), {0, 1, 2}); 
-    shared_ptr<Grid> grid(factory.createGrid());
+    std::shared_ptr<Grid> grid(factory.createGrid());
     auto gridView = grid->leafGridView();
     
     using operatorType = BCRSMatrix<FieldMatrix<double, 2, 2>>;

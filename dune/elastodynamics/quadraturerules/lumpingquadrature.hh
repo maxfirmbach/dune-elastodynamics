@@ -1,6 +1,15 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
+/*
+This file is taken from the dune-fufem module!
+Title: symmetrictensor.hh
+Authors: dune-fufem team dune-fufem@lists.spline.inf.fu-berlin.de
+Date: 2021
+Version: -
+Availability: https://git.imp.fu-berlin.de/agnumpde/dune-fufem/-/blob/master/dune/fufem/quadraturerules/lumpingquadraturerule.hh
+*/
+
 #ifndef LUMPINGQUADRATURERULE_HH
 #define LUMPINGQUADRATURERULE_HH
 
@@ -10,9 +19,6 @@
 template<class ct, int dim>
 class LumpingQuadratureRule : public Dune::QuadratureRule<ct, dim> {
 
-  //typedef typename Dune::QuadratureRule<ct, dim> Base;
-  //typedef typename Dune::QuadraturePoint<ct, dim> QuadPoint;
-  
   using Base = Dune::QuadratureRule<ct, dim>;
   using QuadPoint = Dune::QuadraturePoint<ct, dim>;
 
@@ -22,9 +28,7 @@ class LumpingQuadratureRule : public Dune::QuadratureRule<ct, dim> {
   
       auto refElement = Dune::ReferenceElements<ct, dim>::general(this->type());
       int size = refElement.size(dim);
-      
-      std::cout << "\nReference element \n" << size << std::endl;
-      
+            
       ct weight = refElement.volume()/size;
       this->reserve(size);
       for(int i=0; i<size; ++i) {

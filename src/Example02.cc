@@ -4,7 +4,6 @@
 #include <config.h>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/function.hh>
 
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/io/file/gmshreader.hh>
@@ -41,8 +40,8 @@ int main(int argc, char** argv) {
   auto mesh = "cookmembrane.msh";
   std::vector<int> materialIndex, boundaryIndex;
   GridFactory<Grid> factory;
-  GmshReader<Grid>::read(factory, mesh, boundaryIndex, materialIndex, true, true);
-  shared_ptr<Grid> grid(factory.createGrid());    
+  GmshReader<Grid>::read(factory, mesh, boundaryIndex, materialIndex);
+  std::shared_ptr<Grid> grid(factory.createGrid());    
   auto gridView = grid->leafGridView();
   
   // generate Basis

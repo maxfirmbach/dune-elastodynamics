@@ -112,13 +112,9 @@ namespace Dune {
 	        displacement = displacement_tilde_;
 	        velocity = velocity_tilde_;
 	        break;
-	      }
-	 
-	    }
-	    
-	  }	
-	  
-	  
+	      }	 
+	    }	    
+	  }		  
   };
 }
 
