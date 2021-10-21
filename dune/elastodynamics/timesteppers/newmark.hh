@@ -7,38 +7,28 @@
 #include "coefficients.hh"
 #include "timestepcontroller.hh"
 
-#include <dune/elastodynamics/preconditioners/distributedscalarproduct.hh>
-#include <dune/elastodynamics/preconditioners/distributedpreconditioner.hh>
+#include <dune/istl/umfpack.hh>
 
 namespace Dune {
 
-  template <typename GridView, typename MatrixType, typename VectorType>	
+  template <typename MatrixType, typename VectorType>	
   class Newmark {
-  
-    using Jacobi          = SeqJac<MatrixType, VectorType, VectorType>;
-    using Preconditioner  = DistributedPreconditioner<GridView, Jacobi>;
-    using ScalarProduct   = DistributedScalarProduct<GridView, VectorType>;
-    using LinearOperator  = MatrixAdapter<MatrixType, VectorType, VectorType>;
 	
     private:
 	
 	  TimeStepController fixed_;
 	  double dt_;
 	
-	  MatrixType efficient_mass_, mass_, stiffness_;
-	  const GridView& gridView_;
-	
+	  MatrixType efficient_mass_, mass_, stiffness_;	
 	  double beta_, gamma_;
 
     public:
 	  
-      Newmark(GridView& gridView,
-              MatrixType& mass,
+      Newmark(MatrixType& mass,
               MatrixType& stiffness,
               NewmarkCoefficients& coefficients,
 	          TimeStepController& fixed)
-	  : gridView_(gridView)
-	  , mass_(mass)
+	  : mass_(mass)
 	  , stiffness_(stiffness)
 	  , beta_(coefficients.beta())
 	  , gamma_(coefficients.gamma())
@@ -50,14 +40,9 @@ namespace Dune {
 	                  VectorType load) // we only want a copy and not work on the memory here!
 	  {
         // initial value calculation for acceleration
-        Jacobi         jacobi(mass_, 1, 1.0);      
-        Preconditioner preconditioner(gridView_, jacobi);
-        ScalarProduct  scalarProduct(gridView_);
-        LinearOperator linearOperator(mass_);
-  
-        CGSolver<VectorType> solver(linearOperator, scalarProduct, preconditioner, 1e-8, 15000,
-                                    (gridView_.comm().rank()==0) ? 1 : 0);
-  
+        UMFPack<MatrixType> solver(mass_);
+        solver.setVerbosity(1);
+
         InverseOperatorResult statistics;   
         solver.apply(acceleration, load, statistics);
         
@@ -84,15 +69,10 @@ namespace Dune {
         // solve
         stiffness_.mmv(displacement, load);
         
-        Jacobi         jacobi(efficient_mass_, 1, 1.0);      
-        Preconditioner preconditioner(gridView_, jacobi);
-        ScalarProduct  scalarProduct(gridView_);
-        LinearOperator linearOperator(efficient_mass_);
-  
-        CGSolver<VectorType> solver(linearOperator, scalarProduct, preconditioner, 1e-8, 15000,
-                                    (gridView_.comm().rank()==0) ? 1 : 0);
-  
-        InverseOperatorResult statistics;   
+        UMFPack<MatrixType> solver(efficient_mass_);
+        solver.setVerbosity(1);
+ 
+        InverseOperatorResult statistics;
         solver.apply(acceleration, load, statistics);
               
         // corrector
