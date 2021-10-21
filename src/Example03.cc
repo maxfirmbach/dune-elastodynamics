@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
   // set up Newmark-beta method
   FixedStepController fixed(t, dt);
   NewmarkCoefficients coefficients = ConstantAcceleration();
-  Newmark<GridView, operatorType, blockVector> newmark(gridView, massMatrix, stiffnessMatrix, coefficients, fixed);
+  Newmark<operatorType, blockVector> newmark(massMatrix, stiffnessMatrix, coefficients, fixed);
   newmark.initialize(acceleration, loadVector);
     
   while(t < 0.025) {
