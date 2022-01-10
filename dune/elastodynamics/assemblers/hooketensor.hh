@@ -37,22 +37,23 @@ namespace Dune::Elastodynamics {
         
         // Here be careful which to choose, i guess      
         // plane strain
-        /*
+        
         C[0][0] = 1.0-nu; C[0][1] = nu;
         C[1][0] = nu;     C[1][1] = 1.0-nu;
         
         C[2][2] = 1.0-2.0*nu;
         
         C *= E/((1.0+nu)*(1.0-2.0*nu));
-        */
         
         // plane stress
+        /*
         C[0][0] = 1.0; C[0][1] = nu;
         C[1][0] = nu;  C[1][1] = 1.0;
         
         C[2][2] = 1.0-nu;
         
         C *= E/(1.0-nu*nu);
+        */
       }
   };
      

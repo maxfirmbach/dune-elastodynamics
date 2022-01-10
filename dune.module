@@ -7,4 +7,4 @@ Module: dune-elastodynamics
 Version: 1.0
 Maintainer: max.firmbach@unibw.de
 #depending on
-Depends: dune-common (>= 2.7) dune-geometry (>= 2.7) dune-uggrid (>= 2.7) dune-grid (>= 2.7) dune-localfunctions (>= 2.7) dune-istl (>= 2.7) dune-functions (>= 2.7) dune-foamgrid (>= 2.7)
+Depends: dune-common (>= 2.7) dune-geometry (>= 2.7) dune-uggrid (>= 2.7) dune-grid (>= 2.7) dune-localfunctions (>= 2.7) dune-istl (>= 2.7) dune-functions (>= 2.7) dune-foamgrid (>= 2.7) dune-pdelab

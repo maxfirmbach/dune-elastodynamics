@@ -91,7 +91,7 @@ namespace Dune::Elastodynamics {
     }
   };
 
-  class StiffnessAssemblerTruss {
+  class StiffnessAssemblerTrussQuadrature {
 
     private:
     
@@ -100,7 +100,7 @@ namespace Dune::Elastodynamics {
     public:
 
       typedef typename Dune::Matrix<Dune::FieldMatrix<double, 1, 1>> LocalMatrix;
-      StiffnessAssemblerTruss(double E, double A)
+      StiffnessAssemblerTrussQuadrature(double E, double A)
         : E_(E), A_(A)
       {}
 
@@ -117,8 +117,8 @@ namespace Dune::Elastodynamics {
         localMatrix.setSize(localView.size(), localView.size());
         localMatrix = 0.0;
 
-        int n = 15;
-        const auto& quadRule = QuadratureRules<double, dim>::rule(element.type(), n, Dune::QuadratureType::GaussLobatto);
+        int order = 2*(dimworld*localFE.localBasis().order()-1);;
+        const auto& quadRule = QuadratureRules<double, dim>::rule(element.type(), order);
 
         for(const auto& quadPoint : quadRule) {
     

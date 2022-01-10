@@ -19,13 +19,15 @@
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/bdmatrix.hh>
 #include <dune/istl/io.hh>
+#include <dune/istl/umfpack.hh>
 
 #include <dune/functions/functionspacebases/powerbasis.hh>
 #include <dune/functions/functionspacebases/lagrangebasis.hh>
+#include <dune/functions/functionspacebases/interpolate.hh>
 #include <dune/functions/gridfunctions/discreteglobalbasisfunction.hh>
 
 #include <dune/elastodynamics/assemblers/operatorassembler.hh>
-// here include your stiffness/mass element assembler
+#include <dune/elastodynamics/assemblers/stiffnessassembler_truss.hh>
 
 using namespace Dune;
 
@@ -34,20 +36,21 @@ int main (int argc, char *argv[]) {
   // set up MPI (is always needed)
   const MPIHelper& mpiHelper = MPIHelper::instance(argc, argv);
 
-  const int p        = 1; // element order
+  // load and generate grid / gridview
+  const int p        = 2; // element order
   const int dim      = 1; // element dimension
   const int dimworld = 2; // world dimension
 
   using Grid = FoamGrid<dim, dimworld>;
   using GridView = Grid::LeafGridView;
   
-  // load and generate grid / gridview
   GridFactory<Grid> factory;
-  GmshReader<Grid>::read(factory, "framework_2.msh");
+  GmshReader<Grid>::read(factory, "framework_3.msh");
   std::shared_ptr<Grid> grid(factory.createGrid());
   GridView gridView = grid->leafGridView();
   
   // generate Basis
+  std::cout << "Basis Order = " << p << std::endl;
   using namespace Functions::BasisFactory;
   auto basis = makeBasis(gridView, power<dimworld>(lagrange<p>()));
   using Basis = decltype(basis);
@@ -55,53 +58,56 @@ int main (int argc, char *argv[]) {
   // define operators needed
   using operatorType = BCRSMatrix<FieldMatrix<double, dimworld, dimworld>>;
   using blockVector  = BlockVector<FieldVector<double, dimworld>>;
-  
+
   // assemble problem
-  //
-  // This would be student part
-  //
-  // Here you should assemble the stiffness matrix of the problem
-  // and maybe also the mass matrix for dynamic problems
-  //
-  // Example for 2D/3D solid elements for stiffness and mass matrix:
-  //
-  // Elastodynamics::OperatorAssembler<Basis> operatorAssembler(basis);
-  //
-  // double E = 4000000.0, nu = 0.3;
-  // operatorType stiffnessMatrix;
-  // operatorAssembler.initialize(stiffnessMatrix);
-  // Elastodynamics::StiffnessAssembler stiffnessAssembler(E, nu);
-  // operatorAssembler.assemble(stiffnessAssembler, stiffnessMatrix, false);
-  //
-  // double rho = 1.0;
-  // operatorType massMatrix;
-  // operatorAssembler.initialize(massMatrix);
-  // Elastodynamics::ConsistentMassAssembler massAssembler(rho);
-  // operatorAssembler.assemble(massAssembler, massMatrix, false);
-  //
-  
+  Elastodynamics::OperatorAssembler<Basis> operatorAssembler(basis);
+  double E = 1e7, A = 0.1;
+
+  operatorType stiffnessMatrix;
+  operatorAssembler.initialize(stiffnessMatrix);
+  Elastodynamics::StiffnessAssemblerTruss stiffnessAssembler(E, A);
+  operatorAssembler.assemble(stiffnessAssembler, stiffnessMatrix, false);
+
   blockVector loadVector(basis.size()), displacementVector(basis.size());
   loadVector = 0.0, displacementVector = 0.0;
   
   // set dirichlet boundary
-  //
-  // This would be student part
-  //
+  auto displacementPredicate = [](auto coordinate) { return coordinate[1] > -0.001; };
+  blockVector dirichletNodes(basis.size());
+  Functions::interpolate(basis, dirichletNodes, displacementPredicate);
+
+  FieldMatrix<double, dimworld, dimworld> I = {{1,0},{0,1}};
+  FieldMatrix<double, dimworld, dimworld> O = {{0,0},{0,0}};
+
+  for (int i=0; i < stiffnessMatrix.N(); i++) {
+    if (dirichletNodes[i][0]) {
+      auto cIt = stiffnessMatrix[i].begin();
+      auto cEndIt = stiffnessMatrix[i].end();
+      for (; cIt!=cEndIt; ++cIt)
+        *cIt = (cIt.index()==i) ? I : O;
+    }
+  }
   
   // set neumann boundary
-  //
-  // This would be student part
-  //
+  auto loadPredicate = [](auto coordinate) { return coordinate[1] < -8.500; };
+  blockVector neumannNodes(basis.size());
+  Functions::interpolate(basis, neumannNodes, loadPredicate);
   
-  // solve the arising linear system Ku=f
-  // with an appropriate method for static cases
-  //
-  // if dynamic set a time loop and an appropriate
-  // integrator to evolve the ODE in time
-  //
-  // This would be student part
-  //
+  FieldVector<double, dimworld> L = {0, -1732};
   
+  for (int i=0; i < neumannNodes.size(); i++) {
+    if (neumannNodes[i][0]) {
+      loadVector[i] = L;
+    }
+  }
+
+  // solve the arising linear system Ku=f 
+  UMFPack<operatorType> umfpack(stiffnessMatrix);
+  umfpack.setVerbosity(2);
+  
+  InverseOperatorResult statistics;
+  umfpack.apply(displacementVector, loadVector, statistics);
+
   // generate global displacement function
   using displacementRange = FieldVector<double, dimworld>;
   auto displacementFunction = Functions::makeDiscreteGlobalBasisFunction<displacementRange> (basis, displacementVector);
@@ -110,5 +116,4 @@ int main (int argc, char *argv[]) {
   SubsamplingVTKWriter<GridView> vtkWriter(gridView, refinementLevels(p));
   vtkWriter.addVertexData(displacementFunction, VTK::FieldInfo("displacement", VTK::FieldInfo::Type::vector, dimworld));
   vtkWriter.write("framework-result");
-
 }

@@ -7,4 +7,5 @@ install(FILES
   operatorassembler_parallel.hh
 	stiffnessassembler.hh
 	symmetrictensor.hh
+	stiffnessassembler_truss.hh
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/elastodynamics/assemblers)

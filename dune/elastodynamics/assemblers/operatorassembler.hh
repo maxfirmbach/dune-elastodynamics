@@ -74,7 +74,7 @@ namespace Dune::Elastodynamics {
 
 
       template <class GlobalMatrixType>
-      void initialize(GlobalMatrixType& A)  
+      void initialize(GlobalMatrixType& A)
       {     
         Dune::MatrixIndexSet occupationPattern(basis_.size(), basis_.size());
 		addIndices(occupationPattern);

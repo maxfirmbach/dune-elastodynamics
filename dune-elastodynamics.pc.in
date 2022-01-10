@@ -10,6 +10,6 @@ Name: @PACKAGE_NAME@
 Version: @VERSION@
 Description: dune-elastodynamics module
 URL: http://dune-project.org/
-Requires: dune-common dune-geometry dune-uggrid dune-grid dune-localfunctions dune-istl dune-functions dune-foamgrid
+Requires: dune-common dune-geometry dune-uggrid dune-grid dune-localfunctions dune-istl dune-functions dune-foamgrid dune-pdelab
 Libs: -L${libdir}
 Cflags: -I${includedir}
